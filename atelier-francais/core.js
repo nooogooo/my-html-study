@@ -84,10 +84,46 @@ export function pendingCount(state) {return state.events.filter(e=>!e.synced).le
 export function pendingDraftCount(state){return Object.entries(state.drafts).filter(([id,strokes])=>strokes.length&&state.savedDrafts?.[id]!==canonical(strokes)).length;}
 export function safeText(value) {return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 export function openRepository(indexedDB=globalThis.indexedDB) {
-  let dbPromise;
-  function db(){return dbPromise ||= new Promise((resolve,reject)=>{const request=indexedDB.open(APP,1);request.onupgradeneeded=()=>request.result.createObjectStore('cache');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});}
+  let dbPromise,connection;
+  function invalidate(d){if(connection===d){connection=undefined;dbPromise=undefined;}}
+  function db(){
+    if(!dbPromise){
+      const opening=new Promise((resolve,reject)=>{
+        const request=indexedDB.open(APP,1);
+        request.onupgradeneeded=()=>request.result.createObjectStore('cache');
+        request.onsuccess=()=>{
+          const d=request.result;connection=d;
+          d.onclose=()=>invalidate(d);
+          d.onversionchange=()=>{invalidate(d);d.close();};
+          resolve(d);
+        };
+        request.onerror=()=>reject(request.error);
+      });
+      dbPromise=opening;
+      opening.catch(()=>{if(dbPromise===opening)dbPromise=undefined;});
+    }
+    return dbPromise;
+  }
+  async function transact(mode,operation){
+    for(let attempt=0;attempt<2;attempt++){
+      const d=await db();let tx;
+      try{tx=d.transaction('cache',mode);}catch(error){
+        // A closing connection rejected the transaction before any request ran.
+        if(attempt===0&&error.name==='InvalidStateError'){invalidate(d);d.close();continue;}
+        throw error;
+      }
+      return new Promise((resolve,reject)=>{
+        let result;
+        tx.oncomplete=()=>resolve(result);
+        tx.onerror=()=>reject(tx.error||Error('저장 실패'));
+        tx.onabort=()=>reject(tx.error||Error('저장 중단'));
+        try{const req=operation(tx.objectStore('cache'));if(mode==='readonly')req.onsuccess=()=>{result=req.result||null;};}
+        catch(error){try{tx.abort();}catch{}reject(error);}
+      });
+    }
+  }
   return {
-    async read(){const d=await db();return new Promise((resolve,reject)=>{const tx=d.transaction('cache','readonly');const req=tx.objectStore('cache').get('state');req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);});},
-    async write(state){const d=await db();return new Promise((resolve,reject)=>{const tx=d.transaction('cache','readwrite');tx.objectStore('cache').put(structuredClone(state),'state');tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||Error('저장 실패'));tx.onabort=()=>reject(tx.error||Error('저장 중단'));});}
+    read(){return transact('readonly',cache=>cache.get('state'));},
+    async write(state){const snapshot=structuredClone(state);return transact('readwrite',cache=>cache.put(snapshot,'state'));}
   };
 }
