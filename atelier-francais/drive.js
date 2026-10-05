@@ -99,6 +99,6 @@ export function authorize(adapter,clientId,gis=globalThis.google?.accounts?.oaut
   return new Promise((resolve,reject)=>{
     let settled=false;const done=(err,response)=>{if(settled)return;settled=true;clearTimeout(timer);if(err){adapter.disconnect();reject(err);}else{adapter.setToken(response.access_token,response.expires_in);resolve();}};
     const timer=setTimeout(()=>done(new AppError('연결 창을 닫았거나 응답이 지연되었습니다. 다시 연결해 주세요.','cancel')),120000);
-    try{const client=gis.initTokenClient({client_id:clientId,scope:SCOPE,include_granted_scopes:false,login_hint:ACCOUNT,callback:r=>{if(r.error||!r.access_token||!gis.hasGrantedAllScopes(r,SCOPE)){done(new AppError('Drive 권한 연결이 완료되지 않았습니다. 기록은 보존됩니다.','cancel'));return;}done(null,r);},error_callback:()=>done(new AppError('Google 연결이 취소되었습니다. 기록은 보존됩니다.','cancel'))});client.requestAccessToken({prompt:'select_account'});}catch{done(new AppError('Google 연결 창을 열 수 없습니다. 다시 시도해 주세요.','auth'));}
+    try{const client=gis.initTokenClient({client_id:clientId,scope:SCOPE,prompt:'',include_granted_scopes:false,login_hint:ACCOUNT,callback:r=>{if(r.error||!r.access_token||!gis.hasGrantedAllScopes(r,SCOPE)){done(new AppError('Drive 권한 연결이 완료되지 않았습니다. 기록은 보존됩니다.','cancel'));return;}done(null,r);},error_callback:()=>done(new AppError('Google 연결이 취소되었습니다. 기록은 보존됩니다.','cancel'))});client.requestAccessToken({prompt:''});}catch{done(new AppError('Google 연결 창을 열 수 없습니다. 다시 시도해 주세요.','auth'));}
   });
 }
