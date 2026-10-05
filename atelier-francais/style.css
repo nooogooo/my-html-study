@@ -12,7 +12,8 @@
 
 .writing-original{position:sticky;top:10px;z-index:5;background:#f1f5ec;box-shadow:0 3px 12px #25423212}#writing-original-text{max-height:180px;overflow:auto;overscroll-behavior:contain}.writing-original .concealed{min-height:0;padding:12px;font-size:.85rem;line-height:1.5}.writing-original .section-head{margin-bottom:6px}
 
-/* Keep native selection and callouts out of the writing controls only. */
-.write-layout .toolbar,.write-layout .toolbar *,.write-layout .canvas-wrap,.write-layout .canvas-wrap *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* Suppress native selection throughout writing mode, including text around the canvas. */
+body.writing-mode,body.writing-mode *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.writing-mode input,body.writing-mode textarea,body.writing-mode select,body.writing-mode [contenteditable]:not([contenteditable="false"]),body.writing-mode [contenteditable]:not([contenteditable="false"]) *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 .write-layout .canvas-wrap{touch-action:none}
 .write-layout .toolbar{touch-action:manipulation}
