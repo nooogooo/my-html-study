@@ -64,10 +64,11 @@ export function mergeLessons(existing,incoming,{updates=false,remote=false}={}) 
 export function emptyState() {return {version:1,account:ACCOUNT,lessons:[],events:[],assets:[],drafts:{},savedDrafts:{},syncedLessons:{},catalogId:'',rootFolderId:'',recordsFolderId:'',sourceFolderId:'',dateFolderIds:{},lastSync:null,deviceId:crypto.randomUUID()};}
 export function makeEvent(state,lessonId,type,payload={}) {return {schemaVersion:1,id:crypto.randomUUID(),deviceId:state.deviceId,lessonId,type,payload,at:new Date().toISOString()};}
 export function validateEvent(e) {
-  if(!e || e.schemaVersion!==1 || !/^[\w-]{16,80}$/.test(e.id||'') || !/^[\w-]{16,80}$/.test(e.deviceId||'') || !e.lessonId?.startsWith('gmail:'+ACCOUNT+':') || !['bookmark','complete','review','asset'].includes(e.type) || !Number.isFinite(Date.parse(e.at)) || !e.payload || typeof e.payload!=='object'||Array.isArray(e.payload))fail('학습 기록 형식을 확인해 주세요.');
+  if(!e || e.schemaVersion!==1 || !/^[\w-]{16,80}$/.test(e.id||'') || !/^[\w-]{16,80}$/.test(e.deviceId||'') || !e.lessonId?.startsWith('gmail:'+ACCOUNT+':') || !['bookmark','complete','review','recall','asset'].includes(e.type) || !Number.isFinite(Date.parse(e.at)) || !e.payload || typeof e.payload!=='object'||Array.isArray(e.payload))fail('학습 기록 형식을 확인해 주세요.');
   if(e.type==='bookmark'&&(typeof e.payload.saved!=='boolean'||typeof e.payload.fr!=='string'||typeof e.payload.ko!=='string'||e.payload.fr.length>10000||e.payload.ko.length>10000))fail('표현 저장 기록을 확인해 주세요.');
   if(e.type==='complete'&&typeof e.payload.completed!=='boolean')fail('필사 완료 기록을 확인해 주세요.');
   if(e.type==='review'&&(!Number.isInteger(e.payload.total)||!Number.isInteger(e.payload.correct)||e.payload.correct<0||e.payload.correct>e.payload.total||e.payload.total>100))fail('복습 기록을 확인해 주세요.');
+  if(e.type==='recall'&&(typeof e.payload.remembered!=='boolean'||!['recall','blank'].includes(e.payload.kind)||typeof e.payload.fr!=='string'||!e.payload.fr.trim()||e.payload.fr.length>10000||typeof e.payload.ko!=='string'||!e.payload.ko.trim()||e.payload.ko.length>10000||typeof e.payload.prompt!=='string'||!e.payload.prompt.trim()||e.payload.prompt.length>10000))fail('단어별 복습 기록을 확인해 주세요.');
   if(e.type==='asset'&&(!/^[\w-]{16,80}$/.test(e.payload.assetId||'')||!['canvas','photo'].includes(e.payload.kind)))fail('필사 파일 기록을 확인해 주세요.');
   return JSON.parse(JSON.stringify(e));
 }
