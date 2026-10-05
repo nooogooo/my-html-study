@@ -11,3 +11,8 @@
 .nav a{width:110px;flex:0 1 110px}.audio-preview{width:100%;height:160px;border:1px solid var(--line);border-radius:12px;background:#f5f6f0;margin-bottom:14px}.calendar-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:10px}.calendar-toolbar h2{margin:0}.calendar-week,.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.calendar-week span{text-align:center;font-size:13px;padding:8px 0}.calendar-date{min-width:0;min-height:58px;padding:5px 1px;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:16px}.calendar-date small{font-size:10px;line-height:1.2;white-space:nowrap}.calendar-date:disabled{opacity:.65;cursor:default}.day-study{background:#f3eee0;border-color:#dbcba9}.day-done{background:#e0ecda;border-color:#91ad81;color:#264b37}@media(max-width:480px){.nav a{width:20%;flex:0 1 20%}.calendar-grid{gap:3px}.calendar-date{min-height:56px}.calendar-grid+.notice{margin-top:14px}}
 
 .writing-original{position:sticky;top:10px;z-index:5;background:#f1f5ec;box-shadow:0 3px 12px #25423212}#writing-original-text{max-height:180px;overflow:auto;overscroll-behavior:contain}.writing-original .concealed{min-height:0;padding:12px;font-size:.85rem;line-height:1.5}.writing-original .section-head{margin-bottom:6px}
+
+/* Keep native selection and callouts out of the writing controls only. */
+.write-layout .toolbar,.write-layout .toolbar *,.write-layout .canvas-wrap,.write-layout .canvas-wrap *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.write-layout .canvas-wrap{touch-action:none}
+.write-layout .toolbar{touch-action:manipulation}
